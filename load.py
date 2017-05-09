@@ -1,33 +1,30 @@
-from scipy.stats import norm
-import h5py    # HDF5 support
+import sys
+import h5py
+import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-import numpy as np
-from scipy import signal
-import sys
+import scipy.signal
+from scipy.stats import norm, kurtosis
 
 fileName = "Particles1.h5"
 f = h5py.File(fileName,  "r")
+
 
 variables = ['x','y','z','vx','vy','vz']
 for i in variables:
     globals()[i] = f['DNS']['BEAM'][i]
 time = x.shape[0] 
+data = np.zeros(time)
 posx = np.zeros(time)
 posy = np.zeros(time)
 posz = np.zeros(time)
-velx = np.zeros(time)
-data = np.zeros(time)
-vel = np.zeros(time)
-#mean, var, skew, kurt = norm.stats(moments='mvsk')
-
 if sys.argv[1] == 'spectrum':
     for i in range(100):
         for j in range(0,time):
             data[j] += (vx[j][i]**2+vy[j][i]**2+vz[j][i]**2)**0.5
     data = data/100.
     fs = 20000
-    f, Pxx= signal.welch(data, fs, window='hanning', nperseg=1024, 
+    f, Pxx= scipy.signal.welch(data, fs, window='hanning', nperseg=1024, 
     noverlap=16 , nfft=None, detrend='constant', return_onesided=True, 
     scaling='density', axis=-1)
     m = np.arange(100.,1000.)
@@ -51,19 +48,63 @@ elif sys.argv[1] == 'trace':
         ax.plot(posx,posy,posz,label='particle{}'.format(i))
     ax.legend()    
     plt.show()
-elif sys.argv[1] == 'pdf':
-    print('pdf')
+elif sys.argv[1] == 'spdf':
+    print('single time statistics - pdf')
+    
+    #vel = (vx[0,:]**2+vy[0,:]**2+vz[0,:]**2)**0.5
+    vel = vx[1,:]
+
+    fig, ax = plt.subplots()
+    ax.scatter(vel,norm.pdf(vel), c='b', label='time = 1')
+    plt.legend()
+    #ax.semilogy(stvx, norm.pdf(stvx,loc=0), label='norm pdf')
+    ax.set_ylim(1e-4,1)
+    ax.set_xlim(-6,6)
+    ax.set_yscale('log')
+    ax.set_xlabel('u_x [m/s]')
+    ax.set_ylabel('PDF')
+    ax.grid()
+    plt.show()
+elif sys.argv[1] == 'tpdf':
+    print('two time statistics - pdf')
+    #vel0 = (vx[0,:]**2+vy[0,:]**2+vz[0,:]**2)**0.5
+    #vel = (vx[100,:]**2+vy[100,:]**2+vz[100,:]**2)**0.5
+    #vel2 = (vx[500,:]**2+vy[500,:]**2+vz[500,:]**2)**0.5
+    #vel3 = (vx[3000,:]**2+vy[3000,:]**2+vz[3000,:]**2)**0.5
+    vel0 = vx[0,:]
+    vel = vx[1,:]
+    vel2 = vx[500,:]
+    vel3 = vx[3000,:]   
+    stvx = vel - vel0
+    stvx2 = vel2 - vel0
+    stvx3 = vel3 - vel0
+    for i in range(10):
+        print(stvx[i],stvx2[i],stvx3[i])
+    fig, ax = plt.subplots()
+    ax.scatter(stvx,norm.pdf(stvx), c='b', label='first')
+    ax.scatter(stvx2,norm.pdf(stvx2), c='r', label='second')
+    ax.scatter(stvx3,norm.pdf(stvx3), c='y', label='third')
+    plt.legend()
+    #ax.semilogy(stvx, norm.pdf(stvx,loc=0), label='norm pdf')
+    #ax.set_ylim(1e-4,1)
+    #ax.set_xlim(-6,6)
+    #ax.set_yscale('log')
+    ax.grid()
+    plt.show()
 elif sys.argv[1] == 'fluc':
-    for i in range(1):
-        for j in range(0,time):
-            vel[j] = (vx[j][i]**2+vy[j][i]**2+vz[j][i]**2)**0.5
+    fig, ax = plt.subplots()
+    ax.plot(vx[:,0], label='velocity x')
+    ax.plot(vy[:,0], label='velocity y')
+    ax.plot(vz[:,0], label='velocity z')
+    ax.grid()
+    ax.set_ylim(-6,6)
+    ax.set_xlabel('time')
+    ax.set_ylabel('velocity [m/s]')
+    plt.legend()
+    plt.show()
 
 else:
-    print('Choose one: spectrum, trace or pdf')
-#plt.show()
-#fig, ax = plt.subplots(1,1)
-#x = np.linspace(norm.ppf(0.01),norm.ppf(0.99,100))
-#print(x)
-#ax.plot(posx, norm.pdf(velx),'r-', lw=5, alpha=0.6, label='norm pdf')
+    print('Choose one: spectrum, trace, pdf, fluc, ...')
+
 
 
