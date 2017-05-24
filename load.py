@@ -20,26 +20,41 @@ posx = np.zeros(time)
 posy = np.zeros(time)
 posz = np.zeros(time)
 
-#Lagrangian integral time
-
-Re_taylor = 1
 u_rms = np.mean(vx)
 u_fluc = vx[110,:] - u_rms
-print(u_rms)
-epsilon = 1
-nu = 1 #viscosity
-eta = (nu**3/epsilon)**(1./4.) #kolmogorov lenght scale
-#L = 1 #integral scale
-tau_l = np.sqrt(2*np.mean(u_fluc**2)/np.mean(Dvx[110,:]**2))
-Te = tau_l/u_rms #large-eddy turnover time
-print(Te)
-#Lagrangian velocity correlation
 
-print(tau_l)
-#Rl = 
-#Tl = #Lagrangian velocity autocorrelation time
-tau_eta = (eta/epsilon)**(1./2.) # Kolmogorov time scale
-#T = #total integration time
+nech = 250
+nup = 1000
+Ruu = np.zeros(nech)
+#velx = np.mean(vx,axis=1)
+velx = vx[:,0]
+#acelx = np.mean(Dvx,axis=1)
+acelx = Dvx[:,0]
+print(velx.size)
+for i in range(1,nech):
+    for j in range(1, nup):
+        Ruu[i] += (velx[j]* velx[j+i])/nup
+Li = np.sum(Ruu)/(3*np.var(velx))
+print('Integral scale:', Li)
+Ti = Li/np.std(velx)
+print('Integral time:', Ti)
+A = 0.5 #0.5 - 1.0
+epsilon = A*np.std(velx)**3/Li
+print('Epsilon:',epsilon)
+nu = 1.5e-5 #viscosity
+Re_L = np.std(velx)*Li/nu
+print('Integral Reynolds number:',Re_L)
+eta = (nu**3/epsilon)**(1./4.) #kolmogorov lenght scale
+print('Kolmogorov lenght scale:',eta)
+tau_l = np.sqrt(2*np.mean(u_fluc**2)/np.mean(acelx**2))
+print('tau_l ???', tau_l)
+tau_eta = (nu/epsilon)**0.5
+print('Kolmogorov time scale', tau_eta)
+#taylor = (15*u_fluc/epsilon)**0.5 * u_fluc
+#Re_taylor = 1
+Te = tau_l/u_rms #large-eddy turnover time
+print('Large-eddy turnover time', Te)
+
 Np = x[0].size # number of lagrangian tracers
 print('Number of lagrangian tracers:',Np)
 
@@ -56,18 +71,11 @@ if sys.argv[1] == 'time':
     ax.plot(Tl)
     plt.show()
 
-#tl = np.mean(vx[0+t,0]*vx[0,0])/np.var(vx[:,0])
-#print ('Lagrangian integral time scale:',tl)
-#Lagrangian integral scale
-#ll = np.var(vx[:,0])*tl
-#print ('Lagrangian integral scale:',ll)
-
-
 
 if sys.argv[1] == 'second':
     nech = 250
     nup = 1000
-    x = np.arange(0,250)/3.5
+    x = np.arange(0,250)/tau_eta
     s2u = np.zeros(nech)
     s2u2 = np.zeros(nech)
     for i in range(1,nech):
@@ -75,6 +83,7 @@ if sys.argv[1] == 'second':
             s2u[i] += (vx[j+i,0]-vx[j,0])**2/nup
     fig, ax = plt.subplots()
     ax.plot(x,s2u)
+    ax.set_xlabel('tau/tau_kolmogorov')
     ax.set_xscale('log')
     #ax.set_yscale('log')
     ax.grid(which="both")
@@ -253,13 +262,7 @@ elif sys.argv[1] == 'apdf':
     ax.grid(which="both")
     plt.show()
 
-elif sys.argv[1] == 'corr2':
-    vx = vx[:,1]
-    corx = np.zeros(500)
-    for i in range(1,500):
-        for j in range(1, 3000):
-            corx[i] = (corx[i] + vx[j]* vx[j+i])/3000
-        plt.plot(i, corx[i]/np.var(vx))
+
 
 else:
     print('Choose one: spectrum, trace, pdf, fluc, ...')
