@@ -6,7 +6,7 @@ from mpl_toolkits.mplot3d import Axes3D
 import scipy.signal
 from scipy.stats import norm, kurtosis, rv_continuous
 
-
+# open file
 fileName = "Particles1.h5"
 f = h5py.File(fileName,  "r")
 
