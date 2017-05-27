@@ -63,6 +63,14 @@ print('Large-eddy turnover time', Te)
 Np = x[0].size # number of lagrangian tracers
 print('Number of lagrangian tracers:',Np)
 
+if sys.argv[1] == 'correlation':
+    fig, ax = plt.subplots()
+    plt.plot(corrx[0])
+    ax.set_xlabel('time')
+    ax.set_ylabel('correlation')
+    ax.grid(which="both")
+    plt.show()
+
 if sys.argv[1] == 'time':
     Tl = np.zeros(3000)
     for i in range(3000):
@@ -195,58 +203,36 @@ elif sys.argv[1] == 'tpdf':
     print('two time statistics - pdf')
 
     t = 0
-#    for i in range(5):
     fig, ax = plt.subplots()
     for i in range(5):
         t = 10*(i+1)
-        stvx = vx[0,:] - vx[t,:]
+        stvx = vx[t,:] - vx[0,:]
         x = (stvx)/np.sqrt(np.mean((stvx)**2))
         y = norm.pdf(stvx)/t
         ax.scatter(x,y)
-    #ax.scatter(x,norm.logpdf(stvx))
-    #ax.set_ylim(-8,0)
+    ax.set_xlabel('time')
+    ax.grid(which="both")
     ax.set_xlim(-10,10)
-    #ax.set_yscale('log')
-    ax.grid(which="both")
     plt.show()
-    #stvx = vx[0,:] - vx[10,:]
-    #stvx2 = vx[0,:] - vx[20,:]
-    #stvx3 = vx[0,:] - vx[30,:]
-    #x1 = (stvx)/np.var(stvx)
-    #x2 = (stvx2)/np.var(stvx2)
-    #x3 = (stvx3)/np.var(stvx3)
-    #fig, ax = plt.subplots()
-    #ax.scatter(x1,norm.logpdf(stvx), c='b', label='first')
-    #ax.scatter(x2,norm.logpdf(stvx2), c='r', label='second')
-    #ax.scatter(x3,norm.logpdf(stvx3), c='y', label='third')
-    #plt.legend()
-    #ax.set_xlabel('vx/var(vx)')
     ax.set_ylabel('log10 PDF vx(t)')
-    #ax.semilogy(stvx, norm.pdf(stvx,loc=0), label='norm pdf')
 
-    #ax.set_yscale('log')
-    #ax.grid()
-    #plt.show()
-    
-if sys.argv[1] == 'tpdf2':
+elif sys.argv[1] == 'tpdf2':
+    print('two time statistics - pdf')
+
+    t = 0
     fig, ax = plt.subplots()
-    nech = 10
-    nup = 1000
-    s2u = np.zeros(nech)
-    for i in range(1,nech):
-        for j in range(1,nup):
-            s2u[i] += (vx[j+i,0]-vx[j,0])**2/nup
-        ax.plot(s2u,norm.logpdf(s2u))
-    #Var = s2u/(np.var(vx[:,0])**2)
-    #Var2 = s2u2/(np.var(vx[:,0])**2)
-    
-    #ax.set_xscale('log')
+    for i in range(5):
+        t = 10*(i+1)
+        stvx = vx[t,:] - vx[0,:]
+        x = (stvx*t)/np.sqrt(np.mean((stvx*t)**2))
+        y = norm.logpdf(stvx)
+        ax.scatter(x,y)
+    ax.set_xlabel('t*vx/<(t*vx)^2>^0.5')
+    ax.set_ylabel('log10 PDF vx(t)')
     ax.grid(which="both")
-    
+    ax.set_xlim(-10,10)
     plt.show()
-#ax.plot(s2u,norm.logpdf(s2u), c='b', label='time = 1')
-#ax.plot(s2u2,norm.pdf(s2u2), c='r', label='time = 2')
-#plt.show()
+    
     
 elif sys.argv[1] == 'fluc':
     fig, ax = plt.subplots()
