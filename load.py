@@ -109,8 +109,10 @@ if sys.argv[1] == 'second':
             s2u[i] += (vx[j+i,0]-vx[j,0])**2/nup
     fig, ax = plt.subplots()
     ax.plot(x,s2u)
-    ax.set_xlabel('tau/tau_kolmogorov')
+    ax.set_xlabel('delta t')
+    ax.set_ylabel('second order structure function')
     ax.set_xscale('log')
+    ax.set_ylim(0,3.0)
     #ax.set_yscale('log')
     ax.grid(which="both")
     plt.show()
